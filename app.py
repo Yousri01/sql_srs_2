@@ -1,24 +1,48 @@
 import streamlit as st
 import pandas as pd
 import duckdb
+import io
 
-st.write("SQL tuto !")
+csv = '''
+beverage,price
+orange juice,2.5
+Expresso,2
+Tea,3
+'''
 
-option = st.selectbox(
-    "select you an item sql",
-    ("join", "group by", "widow function"),
-)
+beverages = pd.read_csv(io.StringIO(csv))
 
-st.write("You selected:", option)
+csv2 = '''
+food_item,food_price
+cookie juice,2.5
+chocolatine,2
+muffin,3
+'''
 
-data = {"a": [1, 2, 3], "b" : [4, 5, 6]}
+food_items = pd.read_csv(io.StringIO(csv2))
 
-df = pd.DataFrame(data)
+answer = """
+SELECT * FROM beverages
+CROSS JOIN food_items
+"""
 
-sql_query = st.text_area(label="entrer votre input")
+result = duckdb.query(answer).df()
 
-result = duckdb.query(sql_query).df()
+st.header("enter your code")
+query = st.text_area(label="votre code sql ici", key="user_input")
+if query:
+    result = duckdb.sql(query).df()
+    st.dataframe(result)
 
-st.write(f"la query écrite est : {sql_query}")
+tab2, tab3 = st.tabs(["table", "solution"])
 
-st.dataframe(result)
+with tab2:
+    st.write("table : beverages")
+    st.dataframe(beverages)
+    st.write("table : food_items")
+    st.dataframe(food_items)
+    st.write("expected")
+    st.dataframe(result)
+
+with tab3:
+    st.write(answer)
